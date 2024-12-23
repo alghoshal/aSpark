@@ -55,10 +55,6 @@ public class JavaSparkAPITestSuite {
 		assertEquals("[3, 3, 4]",
 				rddSliced.mapPartitions(itr -> Collections.singletonList(Iterators.size(itr)).iterator()).collect().toString());
 
-		/*
-		 * assertEquals("[3, 3, 4]", rddSliced.mapPartitionsWithIndex((anInt, itr) ->
-		 * Arrays.asList(Iterators.size(itr)).iterator(), true) .collect().toString());
-		 */
 	}
 
 }

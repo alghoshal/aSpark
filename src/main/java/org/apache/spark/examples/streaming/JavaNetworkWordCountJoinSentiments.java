@@ -65,6 +65,13 @@ public final class JavaNetworkWordCountJoinSentiments {
 		ssc.awaitTermination();
 	}
 
+	/**
+	 * Joins the words stream to sentiments to fetch the happiest words
+	 * 
+	 * @param words
+	 * @param sentimentsInputRdd
+	 * @return
+	 */
 	public static JavaDStream<Tuple2<Long, String>> fetchStreamingHappiestWords(JavaDStream<String> words,
 			JavaRDD<String> sentimentsInputRdd) {
 		JavaPairRDD<String, Integer> sentiments = sentimentsInputRdd

@@ -6,6 +6,8 @@
 *.iml
 *.ipr
 *.iws
+.checkpoint*
+checkpoint*
 /build
 */build
 out/

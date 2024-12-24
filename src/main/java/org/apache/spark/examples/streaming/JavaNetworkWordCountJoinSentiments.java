@@ -5,6 +5,7 @@ import java.util.regex.Pattern;
 
 import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.JavaPairRDD;
+import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.StorageLevels;
 import org.apache.spark.streaming.Durations;
 import org.apache.spark.streaming.api.java.JavaDStream;
@@ -46,22 +47,12 @@ public final class JavaNetworkWordCountJoinSentiments {
 
 		JavaReceiverInputDStream<String> inputData = ssc.socketTextStream(args[0], Integer.parseInt(args[1]),
 				StorageLevels.MEMORY_AND_DISK_SER);
-
 		JavaDStream<String> words = inputData.flatMap(aWord -> Arrays.asList(SPACE.split(aWord)).iterator());
-		JavaPairDStream<String, Integer> wordCounts = words.mapToPair(aWord -> new Tuple2<String, Integer>(aWord, 1))
-				.reduceByKey((cnt1, cnt2) -> cnt1 + cnt2);
 
 		// Read in the word-sentiment list and create a RDD from it
-		JavaPairRDD<String, Integer> sentiments = ssc.sparkContext().textFile("src/main/resources/AFINN-111.txt")
-				.mapToPair(wordSentimentWt -> new Tuple2<>(wordSentimentWt.split("\t")[0],
-						Integer.valueOf(wordSentimentWt.split("\t")[1])));
-
-		JavaDStream<Tuple2<Long, String>> happiestWords = wordCounts
-				.transform(aWordCountRDD -> sentiments.join(aWordCountRDD)
-						.map(joinRes -> new Tuple2<String, Long>(joinRes._1(),
-								new Long(joinRes._2()._1() * joinRes._2()._2())))
-						.map(prodRes -> prodRes.swap()))
-				.transform(sentimentWordRdd -> sentimentWordRdd.sortBy(tuple -> tuple._1(), false, 1));
+		JavaRDD<String> sentimentsInputRdd = ssc.sparkContext().textFile("src/main/resources/AFINN-111.txt");
+		
+		JavaDStream<Tuple2<Long, String>> happiestWords = fetchStreamingHappiestWords(words, sentimentsInputRdd);
 
 		happiestWords.foreachRDD(sentimentWordRdd -> {
 			if (!sentimentWordRdd.isEmpty()) {
@@ -72,5 +63,23 @@ public final class JavaNetworkWordCountJoinSentiments {
 
 		ssc.start();
 		ssc.awaitTermination();
+	}
+
+	public static JavaDStream<Tuple2<Long, String>> fetchStreamingHappiestWords(JavaDStream<String> words,
+			JavaRDD<String> sentimentsInputRdd) {
+		JavaPairRDD<String, Integer> sentiments = sentimentsInputRdd
+				.mapToPair(wordSentimentWt -> new Tuple2<>(wordSentimentWt.split("\t")[0],
+						Integer.valueOf(wordSentimentWt.split("\t")[1])));
+
+		JavaPairDStream<String, Integer> wordCounts = words.mapToPair(aWord -> new Tuple2<String, Integer>(aWord, 1))
+				.reduceByKey((cnt1, cnt2) -> cnt1 + cnt2);
+
+		JavaDStream<Tuple2<Long, String>> happiestWords = wordCounts
+				.transform(aWordCountRDD -> sentiments.join(aWordCountRDD)
+						.map(joinRes -> new Tuple2<String, Long>(joinRes._1(),
+								new Long(joinRes._2()._1() * joinRes._2()._2())))
+						.map(prodRes -> prodRes.swap()))
+				.transform(sentimentWordRdd -> sentimentWordRdd.sortBy(tuple -> tuple._1(), false, 1));
+		return happiestWords;
 	}
 }

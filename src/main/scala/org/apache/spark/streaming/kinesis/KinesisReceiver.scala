@@ -51,7 +51,7 @@ case class SerializableAWSCredentials(accessKeyId: String, secretKey: String)
  * https://github.com/awslabs/amazon-kinesis-client
  *
  * onStart() - explicitly sets endPoint on kinesis, dynamoDb, cloudWatch clients
- * 
+ *
  * The way this Receiver works is as follows:
  *
  *  - The receiver starts a KCL Worker, which is essentially runs a threadpool of multiple

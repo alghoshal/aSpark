@@ -3,7 +3,7 @@
 # 
 # Expects JAVA_HOME to be set up to a Java 1.8 home location
 #
-# - Download the aSpark project (to the location aSPARK_PROJ_HOME)
+# - Download the aSpark project (https://github.com/alghoshal/aSpark)
 # - Build aSpark: 
 #	mvn install -DskipTests=true -Dcheckstyle.skip 
 # - Execute the script from the downloaded aSpark project location (aSPARK_PROJ_HOME)

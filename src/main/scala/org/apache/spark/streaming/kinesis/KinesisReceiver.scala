@@ -26,7 +26,7 @@ import scala.util.control.NonFatal
 import com.amazonaws.auth.{AWSCredentials, AWSCredentialsProvider, DefaultAWSCredentialsProviderChain}
 import com.amazonaws.regions.RegionUtils
 import com.amazonaws.services.cloudwatch.AmazonCloudWatchClient
-import com.amazonaws.services.dynamodbv2.AmazonDynamoDBAsyncClient
+import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient
 import com.amazonaws.services.kinesis.AmazonKinesisClient
 import com.amazonaws.services.kinesis.clientlibrary.interfaces.{IRecordProcessor, IRecordProcessorCheckpointer, IRecordProcessorFactory}
 import com.amazonaws.services.kinesis.clientlibrary.lib.worker.{InitialPositionInStream, KinesisClientLibConfiguration, Worker}
@@ -173,9 +173,9 @@ private[kinesis] class KinesisReceiver[T](
         new KinesisRecordProcessor(receiver, workerId)
     }
 
-    val dynamoDBClient = new AmazonDynamoDBAsyncClient(new DefaultAWSCredentialsProviderChain())
-    val kinesisClient = new AmazonKinesisClient(new DefaultAWSCredentialsProviderChain())
-    val cloudWatchClient = new AmazonCloudWatchClient(new DefaultAWSCredentialsProviderChain())
+    val dynamoDBClient = new AmazonDynamoDBClient(awsCredProvider)
+    val kinesisClient = new AmazonKinesisClient(awsCredProvider)
+    val cloudWatchClient = new AmazonCloudWatchClient(awsCredProvider)
 
     worker = new Worker(recordProcessorFactory, kinesisClientLibConfiguration,
       kinesisClient, dynamoDBClient, cloudWatchClient)
